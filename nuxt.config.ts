@@ -22,4 +22,7 @@ export default defineNuxtConfig({
      */
     componentDir: '@/components/ui',
   },
+  devServer: {
+    port: 4000,
+  },
 });
