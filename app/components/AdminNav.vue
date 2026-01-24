@@ -12,7 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 const navItems = [
   { name: 'Dashboard', href: '/' },
   { name: 'Users', href: '/users' },
-  { name: 'Content', href: '/content' },
+  { name: 'Content Management', href: '/content' },
 ];
 
 const route = useRoute();
@@ -69,7 +69,7 @@ const isActive = (href: string) => {
           class="flex items-center gap-2 rounded-md px-2 py-1.5 transition-colors hover:bg-muted focus:outline-none"
         >
           <Avatar class="h-7 w-7">
-            <AvatarImage src="/placeholder-avatar.jpg" alt="Admin" />
+            <AvatarImage src="placeholder-user.jpg" alt="Admin" />
             <AvatarFallback class="bg-muted text-xs text-foreground"
               >AD</AvatarFallback
             >

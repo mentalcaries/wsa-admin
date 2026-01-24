@@ -248,7 +248,7 @@ const goToNextPage = () => {
                   </td>
                   <td class="whitespace-nowrap px-6 py-4">
                     <span
-                      class="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary"
+                      class="inline-flex items-center rounded-full bg-/10 px-2.5 py-0.5 text-xs font-medium text-primary"
                     >
                       {{ problem.solutions.length }} solutions
                     </span>
@@ -327,7 +327,7 @@ const goToNextPage = () => {
     </main>
 
     <!-- Problem Edit Modal -->
-    <ProblemModal
+    <ContentProblemModal
       :problem="editingProblem"
       :is-open="isModalOpen"
       @close="closeModal"
@@ -335,7 +335,7 @@ const goToNextPage = () => {
     />
 
     <!-- Delete Confirmation Dialog -->
-    <DeleteConfirmDialog
+    <ContentDeleteConfirmDialog
       :is-open="isDeleteDialogOpen"
       :problem-name="deletingProblem?.name || ''"
       @close="closeDeleteDialog"
