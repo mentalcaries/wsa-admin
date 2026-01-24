@@ -8,16 +8,16 @@ useHead({
   link: [
     {
       rel: 'icon',
-      href: '/icon-light-32x32.png',
+      href: '/favicon-32x32.png',
       media: '(prefers-color-scheme: light)',
     },
     {
       rel: 'icon',
-      href: '/icon-dark-32x32.png',
+      href: '/favicon-32x32.png',
       media: '(prefers-color-scheme: dark)',
     },
-    { rel: 'icon', type: 'image/svg+xml', href: '/icon.svg' },
-    { rel: 'apple-touch-icon', href: '/apple-icon.png' },
+    { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
+    { rel: 'apple-touch-icon', href: '/apple-touch-icon.png' },
   ],
   htmlAttrs: {
     lang: 'en',
