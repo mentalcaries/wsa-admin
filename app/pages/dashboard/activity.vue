@@ -25,6 +25,10 @@ import { generateAllActivities } from '~/utils/activity-data';
 
 const ITEMS_PER_PAGE = 50;
 
+definePageMeta({
+  layout: 'dashboard',
+});
+
 const activityIcons: Record<ActivityType, any> = {
   signup: UserPlus,
   verified: CheckCircle,

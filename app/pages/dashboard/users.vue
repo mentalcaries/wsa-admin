@@ -5,6 +5,10 @@ import { Button } from '@/components/ui/button';
 import type { User } from '~/types';
 import { testUsers } from '~/utils/user-data';
 
+definePageMeta({
+  layout: 'dashboard',
+});
+
 const searchQuery = ref('');
 const selectedUser = ref<User | null>(null);
 const isModalOpen = ref(false);
@@ -30,8 +34,6 @@ const closeModal = () => {
 
 <template>
   <div class="min-h-screen bg-background">
-    <AdminNav />
-
     <main class="pt-14">
       <div class="mx-auto max-w-7xl px-6 py-10">
         <!-- Header -->

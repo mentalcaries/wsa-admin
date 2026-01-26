@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { Toaster } from 'vue-sonner';
+
 useHead({
   title: 'WSA Admin - Dashboard',
   meta: [
@@ -30,6 +32,9 @@ useHead({
 
 <template>
   <div>
-    <NuxtPage />
+    <NuxtLayout>
+      <NuxtPage />
+    </NuxtLayout>
+    <Toaster />
   </div>
 </template>

@@ -6,13 +6,15 @@ import {
   defaultQuickLinks,
 } from '~/utils/dashboard-data';
 
+definePageMeta({
+  layout: 'dashboard'
+})
+
 const activities = generateDummyActivities();
 </script>
 
 <template>
   <div class="min-h-screen bg-background">
-    <AdminNav />
-
     <main class="pt-14">
       <div class="mx-auto max-w-7xl px-6 py-10">
         <!--` Metrics Cards -->

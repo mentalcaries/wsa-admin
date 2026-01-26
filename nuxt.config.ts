@@ -3,14 +3,24 @@ import tailwindcss from '@tailwindcss/vite';
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
-  modules: ['@nuxt/fonts', 'shadcn-nuxt'],
+  modules: ['@nuxt/fonts', 'shadcn-nuxt', '@nuxtjs/supabase'],
+  supabase: {
+    redirectOptions: {
+      login: '/login',
+      callback: '/confirm', //
+      exclude: ['/login', '/confirm'],
+    },
+  },
   css: ['./app/assets/css/main.css'],
   vite: {
     plugins: [tailwindcss()],
+    optimizeDeps: {
+      include: ['@supabase/supabase-js', '@supabase/postgrest-js'],
+    },
   },
   fonts: {
     defaults: {
-      weights: [400, 500,600, 700, 900],
+      weights: [400, 500, 600, 700, 900],
     },
   },
   shadcn: {

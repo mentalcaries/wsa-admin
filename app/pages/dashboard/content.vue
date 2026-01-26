@@ -15,6 +15,10 @@ import { Switch } from '@/components/ui/switch';
 import type { Problem } from '~/types';
 import { initialProblems } from '~/utils/content-data';
 
+definePageMeta({
+  layout: 'dashboard',
+});
+
 const ITEMS_PER_PAGE = 10;
 
 const problems = ref<Problem[]>([...initialProblems]);
@@ -128,7 +132,6 @@ const goToNextPage = () => {
 
 <template>
   <div class="min-h-screen bg-background">
-    <AdminNav />
 
     <main class="pt-14">
       <div class="mx-auto max-w-7xl px-6 py-10">

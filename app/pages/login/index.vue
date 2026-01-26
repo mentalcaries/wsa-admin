@@ -8,23 +8,52 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { toast } from 'vue-sonner';
 
+definePageMeta({
+  layout: false,
+  middleware: [],
+});
+
+const client = useSupabaseClient();
+const user = useSupabaseUser();
 const isLoading = ref(false);
 
-const handleGoogleSignIn = () => {
-  isLoading.value = true;
-  // Simulate OAuth redirect delay
-  setTimeout(() => {
-    // In a real app, this would redirect to Google OAuth
-    navigateTo('/');
-  }, 1500);
-};
+// If already logged in, redirect to dashboard
+watchEffect(() => {
+  if (user.value) {
+    navigateTo('/dashboard');
+  }
+});
 
-const currentYear = new Date().getFullYear();
+const handleGoogleSignIn = async () => {
+  isLoading.value = true;
+
+  try {
+    const { error } = await client.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/confirm`, // Changed to /confirm
+      },
+    });
+
+    if (error) throw error;
+  } catch (error: any) {
+    console.error('Google login error:', error);
+    toast({
+      title: 'Login Failed',
+      description: error.message || 'Could not sign in with Google',
+      variant: 'destructive',
+    });
+    isLoading.value = false;
+  }
+};
 </script>
 
 <template>
-  <div class="flex min-h-screen flex-col items-center mt-24 bg-background px-4">
+  <div
+    class="flex min-h-screen flex-col items-center justify-center bg-background px-4"
+  >
     <div class="w-full max-w-sm">
       <!-- Logo -->
       <div class="mb-8 text-center">
@@ -32,13 +61,13 @@ const currentYear = new Date().getFullYear();
           <div
             class="flex h-10 w-10 items-center justify-center rounded-lg bg-primary"
           >
-            <img src="/logo.png" alt="WSA Logo" class="rounded-lg" />
+            <span class="text-lg font-bold text-primary-foreground"> W </span>
           </div>
           <span class="text-2xl font-semibold text-foreground">
-            WellSolveAble | Control
+            WSA Admin
           </span>
         </div>
-        <p class="text-sm text-muted-foreground my-5">
+        <p class="text-sm text-muted-foreground">
           WellSolveAble Administration Portal
         </p>
       </div>
@@ -47,7 +76,9 @@ const currentYear = new Date().getFullYear();
       <Card class="border-border shadow-sm">
         <CardHeader class="space-y-1 pb-4 text-center">
           <CardTitle class="text-xl font-semibold">Welcome back</CardTitle>
-          <CardDescription> Sign in to access your account </CardDescription>
+          <CardDescription>
+            Sign in to access your admin dashboard
+          </CardDescription>
         </CardHeader>
         <CardContent class="pb-6">
           <Button
@@ -114,11 +145,14 @@ const currentYear = new Date().getFullYear();
           </p>
         </CardContent>
       </Card>
-    </div>
-    <footer>
+
+      <!-- Footer -->
       <p class="mt-6 text-center text-xs text-muted-foreground">
-        &copy; {{ currentYear }} WellSolveAble
+        Need help?
+        <a href="#" class="text-primary underline-offset-4 hover:underline">
+          Contact support
+        </a>
       </p>
-    </footer>
+    </div>
   </div>
 </template>

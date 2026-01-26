@@ -58,6 +58,14 @@ export interface User {
   reports: Report[];
 }
 
+export interface UserProfile {
+  id: string;
+  role: 'user' | 'platform_admin';
+  email?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export interface DatabaseProblem {
   id: string;
   problem_id: string;

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ChevronDown, LogOut, User } from 'lucide-vue-next';
+import { ChevronDown, LogOut } from 'lucide-vue-next';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -8,6 +8,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { toast } from 'vue-sonner';
 
 const navItems = [
   { name: 'Dashboard', href: '/' },
@@ -16,12 +17,44 @@ const navItems = [
 ];
 
 const route = useRoute();
+const client = useSupabaseClient();
+const user = useSupabaseUser();
+
+const userName = computed(
+  () => user.value?.user_metadata?.full_name || 'Admin User',
+);
+const userEmail = computed(() => user.value?.email || '');
+const userAvatar = computed(() => user.value?.user_metadata?.avatar_url);
+const userInitials = computed(() => {
+  if (user.value?.user_metadata?.full_name) {
+    return user.value.user_metadata.full_name
+      .split(' ')
+      .map((n: string) => n[0])
+      .join('')
+      .toUpperCase();
+  }
+  return user.value?.email?.[0]?.toUpperCase() || 'A';
+});
 
 const isActive = (href: string) => {
   if (href === '/') {
     return route.path === '/';
   }
   return route.path.startsWith(href);
+};
+
+const handleLogout = async () => {
+  try {
+    const { error } = await client.auth.signOut();
+    if (error) throw error;
+
+    toast.success('Logged out successfully');
+
+    navigateTo('/login');
+  } catch (error: any) {
+    console.error('Logout error:', error);
+    toast.error(error.message || 'Could not log out');
+  }
 };
 </script>
 
@@ -69,22 +102,23 @@ const isActive = (href: string) => {
         <DropdownMenuTrigger
           class="flex items-center gap-2 rounded-md px-2 py-1.5 transition-colors hover:bg-muted focus:outline-none"
         >
-          <Avatar class="h-7 w-7">
-            <AvatarImage src="placeholder-user.jpg" alt="Admin" />
-            <AvatarFallback class="bg-muted text-xs text-foreground"
-              >AD</AvatarFallback
-            >
+          <Avatar class="h-8 w-8">
+            <AvatarImage v-if="userAvatar" :src="userAvatar" :alt="userName" />
+            <AvatarFallback>{{ userInitials }}</AvatarFallback>
           </Avatar>
           <ChevronDown class="h-4 w-4 text-muted-foreground" />
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" class="w-48">
-          <DropdownMenuItem class="cursor-pointer">
-            <User class="mr-2 h-4 w-4" />
-            Profile
-          </DropdownMenuItem>
+        <DropdownMenuContent align="end" class="w-56">
+          <!-- User Info Header -->
+          <div class="px-2 py-1.5 text-sm">
+            <p class="font-medium">{{ userName }}</p>
+            <p class="text-xs text-muted-foreground">{{ userEmail }}</p>
+          </div>
           <DropdownMenuSeparator />
+          <!-- Logout -->
           <DropdownMenuItem
             class="cursor-pointer text-destructive focus:text-destructive"
+            @click="handleLogout"
           >
             <LogOut class="mr-2 h-4 w-4" />
             Logout
