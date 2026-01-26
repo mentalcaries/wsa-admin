@@ -51,25 +51,15 @@ const handleGoogleSignIn = async () => {
 </script>
 
 <template>
-  <div
-    class="flex min-h-screen flex-col items-center justify-center bg-background px-4"
-  >
+  <div class="flex min-h-screen flex-col items-center mt-40 bg-background px-4">
     <div class="w-full max-w-sm">
       <!-- Logo -->
-      <div class="mb-8 text-center">
-        <div class="mb-2 inline-flex items-center gap-2">
-          <div
-            class="flex h-10 w-10 items-center justify-center rounded-lg bg-primary"
-          >
-            <span class="text-lg font-bold text-primary-foreground"> W </span>
-          </div>
-          <span class="text-2xl font-semibold text-foreground">
-            WSA Admin
-          </span>
-        </div>
-        <p class="text-sm text-muted-foreground">
-          WellSolveAble Administration Portal
-        </p>
+      <div class="flex items-center justify-center gap-2 my-8">
+        <img src="/logo-dark.png" alt="WSA Logo" class="rounded-lg h-12 w-12" />
+        <h2 class="text-2xl font-semibold tracking-tighter text-primary">
+          WellSolveAble |
+          <span class="font-bold tracking-tight text-foreground">Control</span>
+        </h2>
       </div>
 
       <!-- Login Card -->
@@ -77,7 +67,7 @@ const handleGoogleSignIn = async () => {
         <CardHeader class="space-y-1 pb-4 text-center">
           <CardTitle class="text-xl font-semibold">Welcome back</CardTitle>
           <CardDescription>
-            Sign in to access your admin dashboard
+            Sign in to access the WellSolveAble Admin Dashboard
           </CardDescription>
         </CardHeader>
         <CardContent class="pb-6">
