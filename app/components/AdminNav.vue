@@ -35,10 +35,11 @@ const isActive = (href: string) => {
         <div
           class="flex h-8 w-8 items-center justify-center rounded-md bg-primary"
         >
-          <img src="/logo.png" alt="WSA Logo" class="rounded-lg" />
+          <img src="/logo-dark.png" alt="WSA Logo" class="rounded-lg" />
         </div>
-        <h2 class="text-xl font-semibold text-foreground tracking-tighter">
-          WellSolveAble | <span class="font-bold tracking-tight">Control</span>
+        <h2 class="text-xl font-semibold tracking-tighter text-primary">
+          WellSolveAble |
+          <span class="font-bold tracking-tight text-foreground">Control</span>
         </h2>
       </NuxtLink>
 
