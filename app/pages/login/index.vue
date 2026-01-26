@@ -54,11 +54,11 @@ const handleGoogleSignIn = async () => {
   <div class="flex min-h-screen flex-col items-center mt-40 bg-background px-4">
     <div class="w-full max-w-sm">
       <!-- Logo -->
-      <div class="flex items-center justify-center gap-2 my-8">
-        <img src="/logo-dark.png" alt="WSA Logo" class="rounded-lg h-12 w-12" />
+      <div class="flex items-center flex-col justify-center gap-2 my-8">
+        <img src="/logo-dark.png" alt="WSA Logo" class="rounded-lg h-20" />
         <h2 class="text-2xl font-semibold tracking-tighter text-primary">
           WellSolveAble |
-          <span class="font-bold tracking-tight text-foreground">Control</span>
+          <span class="font-bold tracking-tight text-foreground">ControlValve</span>
         </h2>
       </div>
 

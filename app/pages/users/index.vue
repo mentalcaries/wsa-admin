@@ -2,33 +2,51 @@
 import { ref, computed } from 'vue';
 import { Search, Download, Eye } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button';
-import type { User } from '~/types';
-import { testUsers } from '~/utils/user-data';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationFirst,
+  PaginationItem,
+  PaginationLast,
+  PaginationNext,
+  PaginationPrevious,
+} from '~/components/ui/pagination';
+import type { UserListItem, UsersResponse } from '~/types';
 
 definePageMeta({
   layout: 'dashboard',
 });
 
+const currentPage = ref(1);
 const searchQuery = ref('');
-const selectedUser = ref<User | null>(null);
+const selectedUserId = ref<string | null>(null);
 const isModalOpen = ref(false);
 
+const { data, loading, error } = useUsers(currentPage);
+
+const typedData = computed(() => data.value as UsersResponse | null);
+
 const filteredUsers = computed(() => {
-  return testUsers.filter(
-    (user) =>
+  if (!typedData.value?.users) return [];
+
+  if (!searchQuery.value) return typedData.value.users;
+
+  return typedData.value.users.filter(
+    (user: UserListItem) =>
       user.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
       user.email.toLowerCase().includes(searchQuery.value.toLowerCase()),
   );
 });
 
-const handleViewUser = (user: User) => {
-  selectedUser.value = user;
+const handleViewUser = (user: UserListItem) => {
+  selectedUserId.value = user.id;
   isModalOpen.value = true;
 };
 
 const closeModal = () => {
   isModalOpen.value = false;
-  selectedUser.value = null;
+  selectedUserId.value = null;
 };
 </script>
 
@@ -36,7 +54,6 @@ const closeModal = () => {
   <div class="min-h-screen bg-background">
     <main class="pt-14">
       <div class="mx-auto max-w-7xl px-6 py-10">
-        <!-- Header -->
         <div
           class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
         >
@@ -48,13 +65,8 @@ const closeModal = () => {
               View and manage user accounts, subscriptions, and reports
             </p>
           </div>
-          <Button variant="outline" class="gap-2 bg-transparent">
-            <Download class="h-4 w-4" />
-            Export Users
-          </Button>
         </div>
 
-        <!-- Search Bar -->
         <div class="mt-8">
           <div class="relative max-w-md">
             <Search
@@ -69,8 +81,24 @@ const closeModal = () => {
           </div>
         </div>
 
-        <!-- Table -->
         <div
+          v-if="error"
+          class="mt-6 rounded-lg border border-destructive bg-destructive/10 p-4"
+        >
+          <p class="text-sm text-destructive">
+            Failed to load users. Please try again.
+          </p>
+        </div>
+
+        <div
+          v-else-if="loading"
+          class="mt-6 rounded-lg border border-border bg-card p-8 text-center"
+        >
+          <p class="text-sm text-muted-foreground">Loading users...</p>
+        </div>
+
+        <div
+          v-else
           class="mt-6 overflow-hidden rounded-lg border border-border bg-card shadow-sm"
         >
           <div class="overflow-x-auto">
@@ -130,16 +158,24 @@ const closeModal = () => {
                     <span
                       :class="[
                         'text-sm',
-                        user.tier === 'Basic' ? 'text-muted-foreground' : '',
-                        user.tier === 'Professional'
+                        user.tier === 'basic' ? 'text-muted-foreground' : '',
+                        user.tier === 'professional'
                           ? 'text-primary font-medium'
                           : '',
-                        user.tier === 'Enterprise'
+                        user.tier === 'enterprise'
                           ? 'text-foreground font-semibold'
+                          : '',
+                        user.tier === 'None'
+                          ? 'text-muted-foreground italic'
                           : '',
                       ]"
                     >
-                      {{ user.tier }}
+                      {{
+                        user.tier === 'None'
+                          ? 'No subscription'
+                          : user.tier.charAt(0).toUpperCase() +
+                            user.tier.slice(1)
+                      }}
                     </span>
                   </td>
                   <td class="whitespace-nowrap px-6 py-4">
@@ -154,6 +190,9 @@ const closeModal = () => {
                           : '',
                         user.status === 'Pending'
                           ? 'bg-warning/10 text-warning'
+                          : '',
+                        user.status === 'Past Due'
+                          ? 'bg-destructive/10 text-destructive'
                           : '',
                       ]"
                     >
@@ -180,13 +219,48 @@ const closeModal = () => {
               </tbody>
             </table>
           </div>
+
+          <div
+            v-if="typedData?.pagination && typedData.pagination.totalPages > 1"
+            class="border-t border-border px-6 py-4"
+          >
+            <Pagination
+              v-slot="{ page }"
+              v-model:page="currentPage"
+              :total="typedData.pagination.total"
+              :items-per-page="typedData.pagination.limit"
+              :sibling-count="1"
+              show-edges
+            >
+              <PaginationContent class="flex items-center gap-1">
+                <PaginationFirst />
+                <PaginationPrevious />
+
+                <template
+                  v-for="(item, index) in (page as any).items"
+                  :key="index"
+                >
+                  <PaginationItem
+                    v-if="item.type === 'page'"
+                    :value="item.value"
+                  />
+                  <PaginationEllipsis
+                    v-else-if="item.type === 'ellipsis'"
+                    :index="index"
+                  />
+                </template>
+
+                <PaginationNext />
+                <PaginationLast />
+              </PaginationContent>
+            </Pagination>
+          </div>
         </div>
       </div>
     </main>
 
-    <!-- User Detail Modal -->
     <UsersDetailModal
-      :user="selectedUser"
+      :user-id="selectedUserId"
       :is-open="isModalOpen"
       @close="closeModal"
     />

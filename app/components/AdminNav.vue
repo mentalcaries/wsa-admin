@@ -72,7 +72,9 @@ const handleLogout = async () => {
         </div>
         <h2 class="text-xl font-semibold tracking-tighter text-primary">
           WellSolveAble |
-          <span class="font-bold tracking-tight text-foreground">Control</span>
+          <span class="font-bold tracking-tight text-foreground"
+            >ControlValve</span
+          >
         </h2>
       </NuxtLink>
 

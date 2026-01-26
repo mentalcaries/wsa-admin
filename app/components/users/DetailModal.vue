@@ -1,65 +1,55 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import { X, Download, User as UserIcon, CreditCard, FileText } from 'lucide-vue-next'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import type { User } from '~/types'
+import { computed, watch } from 'vue';
+import { X, User as UserIcon, CreditCard, FileText } from 'lucide-vue-next';
 
 interface Props {
-  user: User | null
-  isOpen: boolean
+  userId: string | null;
+  isOpen: boolean;
 }
 
-const props = defineProps<Props>()
+const props = defineProps<Props>();
 const emit = defineEmits<{
-  close: []
-}>()
+  close: [];
+}>();
 
-const initials = computed(() => {
-  if (!props.user) return ''
-  return props.user.name
-    .split(' ')
-    .map((n) => n[0])
-    .join('')
-    .toUpperCase()
-})
+const userIdRef = computed(() => props.userId);
+const { data: user, loading } = useUserDetails(userIdRef);
+
+watch(() => props.userId, (newUserId) => {
+  if (newUserId && props.isOpen) {
+    // Fetch will trigger automatically due to watch in composable
+  }
+});
 
 const getProgressPercentage = (used: number, limit: number) => {
-  return Math.min((used / limit) * 100, 100)
-}
-
-const getStoragePercentage = (used: string, limit: string) => {
-  const usedNum = parseFloat(used)
-  const limitNum = parseFloat(limit)
-  return Math.min((usedNum / limitNum) * 100, 100)
-}
+  return Math.min((used / limit) * 100, 100);
+};
 
 const reportsPercentage = computed(() => {
-  if (!props.user) return 0
-  return getProgressPercentage(props.user.reportsUsed, props.user.reportsLimit)
-})
+  if (!user.value) return 0;
+  return getProgressPercentage(user.value.reportsUsed, user.value.reportsLimit);
+});
 
-const storagePercentage = computed(() => {
-  if (!props.user) return 0
-  return getStoragePercentage(props.user.storageUsed, props.user.storageLimit)
-})
-
-const isReportsNearLimit = computed(() => reportsPercentage.value >= 80)
-const isStorageNearLimit = computed(() => storagePercentage.value >= 80)
+const isReportsNearLimit = computed(() => reportsPercentage.value >= 80);
 
 const handleClose = () => {
-  emit('close')
-}
+  emit('close');
+};
 </script>
 
 <template>
-  <div v-if="isOpen && user" class="fixed inset-0 z-50 flex items-center justify-center">
-    <!-- Backdrop -->
+  <div
+    v-if="isOpen"
+    class="fixed inset-0 z-50 flex items-center justify-center"
+  >
     <div class="absolute inset-0 bg-foreground/20" @click="handleClose" />
 
-    <!-- Modal -->
-    <div class="relative z-10 w-full max-w-3xl max-h-[90vh] overflow-hidden rounded-lg border border-border bg-card shadow-lg">
-      <!-- Header -->
-      <div class="flex items-center justify-between border-b border-border px-6 py-4">
+    <div
+      class="relative z-10 w-full max-w-3xl max-h-[90vh] overflow-hidden rounded-lg border border-border bg-card shadow-lg"
+    >
+      <div
+        class="flex items-center justify-between border-b border-border px-6 py-4"
+      >
         <h2 class="text-lg font-semibold text-foreground">User Details</h2>
         <button
           class="rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
@@ -69,28 +59,27 @@ const handleClose = () => {
         </button>
       </div>
 
-      <!-- Content -->
-      <div class="max-h-[calc(90vh-4rem)] overflow-y-auto px-6 py-6">
-        <!-- User Info Section -->
+      <div v-if="loading" class="px-6 py-12 text-center">
+        <p class="text-sm text-muted-foreground">Loading user details...</p>
+      </div>
+
+      <div v-else-if="user" class="max-h-[calc(90vh-4rem)] overflow-y-auto px-6 py-6">
         <div class="flex items-start gap-5">
-          <Avatar class="h-16 w-16">
-            <AvatarImage :src="user.avatar || '/placeholder.svg'" :alt="user.name" />
-            <AvatarFallback class="bg-primary/10 text-lg text-primary">
-              {{ initials }}
-            </AvatarFallback>
-          </Avatar>
           <div class="flex-1">
             <div class="flex items-center gap-3">
-              <h3 class="text-xl font-semibold text-foreground">{{ user.name }}</h3>
+              <h3 class="text-xl font-semibold text-foreground">
+                {{ user.name }}
+              </h3>
               <span
                 :class="[
                   'rounded-full px-3 py-1 text-xs font-medium',
-                  user.tier === 'Basic' ? 'bg-muted text-muted-foreground' : '',
-                  user.tier === 'Professional' ? 'bg-primary/10 text-primary' : '',
-                  user.tier === 'Enterprise' ? 'bg-foreground/10 text-foreground' : ''
+                  user.tier === 'basic' ? 'bg-muted text-muted-foreground' : '',
+                  user.tier === 'professional' ? 'bg-primary/10 text-primary' : '',
+                  user.tier === 'enterprise' ? 'bg-foreground/10 text-foreground' : '',
+                  user.tier === 'None' ? 'bg-muted text-muted-foreground italic' : '',
                 ]"
               >
-                {{ user.tier }}
+                {{ user.tier === 'None' ? 'No subscription' : user.tier.charAt(0).toUpperCase() + user.tier.slice(1) }}
               </span>
             </div>
             <p class="mt-1 text-sm text-muted-foreground">{{ user.email }}</p>
@@ -100,7 +89,8 @@ const handleClose = () => {
                   'rounded-full px-2.5 py-0.5 text-xs font-medium',
                   user.status === 'Active' ? 'bg-success/10 text-success' : '',
                   user.status === 'Inactive' ? 'bg-muted text-muted-foreground' : '',
-                  user.status === 'Pending' ? 'bg-warning/10 text-warning' : ''
+                  user.status === 'Pending' ? 'bg-warning/10 text-warning' : '',
+                  user.status === 'Past Due' ? 'bg-destructive/10 text-destructive' : '',
                 ]"
               >
                 {{ user.status }}
@@ -110,9 +100,10 @@ const handleClose = () => {
           </div>
         </div>
 
-        <!-- User Info Grid -->
         <div class="mt-8 rounded-lg border border-border bg-muted/30 p-5">
-          <div class="flex items-center gap-2 text-sm font-medium text-foreground">
+          <div
+            class="flex items-center gap-2 text-sm font-medium text-foreground"
+          >
             <UserIcon class="h-4 w-4 text-muted-foreground" />
             Account Information
           </div>
@@ -128,16 +119,19 @@ const handleClose = () => {
           </div>
         </div>
 
-        <!-- Subscription Section -->
         <div class="mt-6 rounded-lg border border-border bg-muted/30 p-5">
-          <div class="flex items-center gap-2 text-sm font-medium text-foreground">
+          <div
+            class="flex items-center gap-2 text-sm font-medium text-foreground"
+          >
             <CreditCard class="h-4 w-4 text-muted-foreground" />
             Subscription Details
           </div>
           <div class="mt-4 grid gap-4 sm:grid-cols-2">
             <div>
               <p class="text-xs text-muted-foreground">Current Plan</p>
-              <p class="mt-1 text-sm font-medium text-foreground">{{ user.tier }}</p>
+              <p class="mt-1 text-sm font-medium text-foreground">
+                {{ user.tier === 'None' ? 'No subscription' : user.tier.charAt(0).toUpperCase() + user.tier.slice(1) }}
+              </p>
             </div>
             <div>
               <p class="text-xs text-muted-foreground">Billing Cycle</p>
@@ -145,116 +139,61 @@ const handleClose = () => {
             </div>
             <div>
               <p class="text-xs text-muted-foreground">Next Billing Date</p>
-              <p class="mt-1 text-sm text-foreground">{{ user.nextBillingDate }}</p>
+              <p class="mt-1 text-sm text-foreground">
+                {{ user.nextBillingDate }}
+              </p>
             </div>
           </div>
           <div class="mt-5 space-y-4">
-            <!-- Reports Progress Bar -->
             <div>
               <div class="flex items-center justify-between text-sm">
-                <span class="text-muted-foreground">Reports Used This Cycle</span>
-                <span :class="isReportsNearLimit ? 'text-warning font-medium' : 'text-foreground'">
+                <span class="text-muted-foreground"
+                  >Reports Used This Cycle</span
+                >
+                <span
+                  :class="
+                    isReportsNearLimit
+                      ? 'text-warning font-medium'
+                      : 'text-foreground'
+                  "
+                >
                   {{ user.reportsUsed }} / {{ user.reportsLimit }}
                 </span>
               </div>
               <div class="mt-2 h-2 w-full overflow-hidden rounded-full bg-muted">
                 <div
-                  :class="['h-full transition-all', isReportsNearLimit ? 'bg-warning' : 'bg-primary']"
+                  :class="[
+                    'h-full transition-all',
+                    isReportsNearLimit ? 'bg-warning' : 'bg-primary',
+                  ]"
                   :style="{ width: `${reportsPercentage}%` }"
-                />
-              </div>
-            </div>
-            <!-- Storage Progress Bar -->
-            <div>
-              <div class="flex items-center justify-between text-sm">
-                <span class="text-muted-foreground">Storage Used</span>
-                <span :class="isStorageNearLimit ? 'text-warning font-medium' : 'text-foreground'">
-                  {{ user.storageUsed }} / {{ user.storageLimit }}
-                </span>
-              </div>
-              <div class="mt-2 h-2 w-full overflow-hidden rounded-full bg-muted">
-                <div
-                  :class="['h-full transition-all', isStorageNearLimit ? 'bg-warning' : 'bg-primary']"
-                  :style="{ width: `${storagePercentage}%` }"
                 />
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Reports Section -->
         <div class="mt-6 rounded-lg border border-border bg-muted/30 p-5">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-2 text-sm font-medium text-foreground">
-              <FileText class="h-4 w-4 text-muted-foreground" />
-              Recent Reports
+          <div
+            class="flex items-center gap-2 text-sm font-medium text-foreground"
+          >
+            <FileText class="h-4 w-4 text-muted-foreground" />
+            Reports Summary
+          </div>
+
+          <div class="mt-4 grid gap-4 sm:grid-cols-2">
+            <div class="rounded-lg border border-border bg-card p-4">
+              <p class="text-xs text-muted-foreground">Completed Reports</p>
+              <p class="mt-2 text-2xl font-semibold text-foreground">
+                {{ user.completedReports }}
+              </p>
             </div>
-            <button
-              v-if="user.reports.length > 0"
-              class="text-xs font-medium text-primary hover:underline"
-            >
-              View All
-            </button>
-          </div>
-
-          <div v-if="user.reports.length === 0" class="mt-4 rounded-lg border border-dashed border-border py-8 text-center">
-            <p class="text-sm text-muted-foreground">No reports created yet</p>
-          </div>
-
-          <div v-else class="mt-4 overflow-hidden rounded-lg border border-border">
-            <table class="w-full">
-              <thead>
-                <tr class="border-b border-border bg-card">
-                  <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                    Report Name
-                  </th>
-                  <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                    Date
-                  </th>
-                  <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                    Status
-                  </th>
-                  <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                    Size
-                  </th>
-                  <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                    Download
-                  </th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-border bg-card">
-                <tr
-                  v-for="report in user.reports.slice(0, 10)"
-                  :key="report.id"
-                  class="transition-colors hover:bg-muted/30"
-                >
-                  <td class="px-4 py-3 text-sm font-medium text-foreground">
-                    {{ report.name }}
-                  </td>
-                  <td class="whitespace-nowrap px-4 py-3 text-sm text-muted-foreground">
-                    {{ report.dateCreated }}
-                  </td>
-                  <td class="whitespace-nowrap px-4 py-3">
-                    <span
-                      :class="[
-                        'rounded-full px-2 py-0.5 text-xs font-medium',
-                        report.status === 'Completed' ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'
-                      ]"
-                    >
-                      {{ report.status }}
-                    </span>
-                  </td>
-                  <td class="whitespace-nowrap px-4 py-3 text-sm text-muted-foreground">
-                    {{ report.fileSize }}
-                  </td>
-                  <td class="whitespace-nowrap px-4 py-3 text-right">
-                    <button class="rounded p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-primary">
-                      <Download class="h-4 w-4" />
-                    </button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+            <div class="rounded-lg border border-border bg-card p-4">
+              <p class="text-xs text-muted-foreground">Draft Reports</p>
+              <p class="mt-2 text-2xl font-semibold text-foreground">
+                {{ user.draftReports }}
+              </p>
+            </div>
           </div>
         </div>
       </div>

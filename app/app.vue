@@ -2,10 +2,9 @@
 import { Toaster } from 'vue-sonner';
 
 useHead({
-  title: 'WSA Admin - Dashboard',
+  title: 'WellSoveAble | ControlValve',
   meta: [
     { name: 'description', content: 'WellSolveAble Admin Dashboard' },
-    { name: 'generator', content: 'v0.app' },
   ],
   link: [
     {

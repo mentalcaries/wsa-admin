@@ -103,3 +103,23 @@ export interface Subscription {
   status: 'active' | 'canceled' | 'past_due';
   tier: 'basic' | 'professional' | 'enterprise';
 }
+
+export interface UserListItem {
+  id: string;
+  name: string;
+  email: string;
+  tier: string;
+  status: 'Active' | 'Inactive' | 'Pending' | 'Past Due';
+  joined: string;
+  lastLogin: string;
+}
+
+export interface UsersResponse {
+  users: UserListItem[];
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+}
