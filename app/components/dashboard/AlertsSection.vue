@@ -1,15 +1,47 @@
 <script setup lang="ts">
-import { computed } from 'vue';
-import { AlertTriangle, CheckCircle } from 'lucide-vue-next';
-import type { Alert } from '~/types';
+import { computed } from 'vue'
+import { AlertTriangle, CheckCircle } from 'lucide-vue-next'
 
-interface Props {
-  alerts: Alert[];
+interface ActionRequired {
+  incompleteSignups: number
+  paymentFailures: number
+  usersAtLimit: number
 }
 
-const props = defineProps<Props>();
+interface Props {
+  alerts: Readonly<ActionRequired>
+}
 
-const hasAlerts = computed(() => props.alerts.length > 0);
+const props = defineProps<Props>()
+
+const alertsList = computed(() => {
+  const items = []
+  
+  if (props.alerts.incompleteSignups > 0) {
+    items.push({
+      id: 'incomplete-signups',
+      message: `${props.alerts.incompleteSignups} incomplete signup${props.alerts.incompleteSignups > 1 ? 's' : ''} (no email verification)`
+    })
+  }
+  
+  if (props.alerts.paymentFailures > 0) {
+    items.push({
+      id: 'payment-failures',
+      message: `${props.alerts.paymentFailures} abandoned checkout${props.alerts.paymentFailures > 1 ? 's' : ''} in the last 7 days`
+    })
+  }
+  
+  if (props.alerts.usersAtLimit > 0) {
+    items.push({
+      id: 'users-at-limit',
+      message: `${props.alerts.usersAtLimit} user${props.alerts.usersAtLimit > 1 ? 's' : ''} at report limit`
+    })
+  }
+  
+  return items
+})
+
+const hasAlerts = computed(() => alertsList.value.length > 0)
 </script>
 
 <template>
@@ -22,12 +54,12 @@ const hasAlerts = computed(() => props.alerts.length > 0);
         v-if="hasAlerts"
         class="flex h-6 min-w-6 items-center justify-center rounded-full bg-warning px-2 text-xs font-medium text-warning-foreground"
       >
-        {{ alerts.length }}
+        {{ alertsList.length }}
       </span>
     </div>
     <ul v-if="hasAlerts" class="divide-y divide-border">
       <li
-        v-for="alert in alerts"
+        v-for="alert in alertsList"
         :key="alert.id"
         class="flex items-start gap-4 px-6 py-4 transition-colors hover:bg-muted/50 cursor-pointer"
       >

@@ -1,12 +1,18 @@
 <script setup lang="ts">
 import { ExternalLink } from 'lucide-vue-next';
-import type { QuickLink } from '~/types';
 
-interface Props {
-  links: QuickLink[];
+interface QuickLink {
+  name: string;
+  href: string;
 }
 
-defineProps<Props>();
+const links: QuickLink[] = [
+  { name: 'Polar Dashboard', href: 'https://polar.sh/dashboard' },
+  { name: 'Resend Analytics', href: 'https://resend.com/emails' },
+  { name: 'PostHog Insights', href: 'https://app.posthog.com' },
+  { name: 'Supabase Console', href: 'https://supabase.com/dashboard' },
+  { name: 'Notion Docs', href: 'https://notion.so' },
+];
 </script>
 
 <template>

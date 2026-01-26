@@ -8,36 +8,69 @@ import {
   AlertTriangle,
   XCircle,
 } from 'lucide-vue-next';
-import type { Activity, ActivityType } from '~/types';
 import ScrollArea from '../ui/scroll-area/ScrollArea.vue';
 
 interface Props {
-  activities: Activity[];
+  activities: readonly any[];
 }
 
 const props = defineProps<Props>();
 
-const activityIcons: Record<ActivityType, any> = {
-  signup: UserPlus,
-  verified: CheckCircle,
-  report: FileText,
-  subscription: CreditCard,
-  warning: AlertTriangle,
-  error: XCircle,
-};
-
-const activityColors: Record<ActivityType, string> = {
-  signup: 'text-success',
-  verified: 'text-success',
-  report: 'text-primary',
-  subscription: 'text-primary',
-  warning: 'text-warning',
-  error: 'text-destructive',
+const eventTypeMap: Record<
+  string,
+  { icon: any; color: string; label: string }
+> = {
+  user_signed_up: {
+    icon: UserPlus,
+    color: 'text-success',
+    label: 'User signed up',
+  },
+  email_verified: {
+    icon: CheckCircle,
+    color: 'text-success',
+    label: 'Email verified',
+  },
+  report_created: {
+    icon: FileText,
+    color: 'text-primary',
+    label: 'Report created',
+  },
+  subscription_active: {
+    icon: CreditCard,
+    color: 'text-primary',
+    label: 'Subscription activated',
+  },
+  subscription_canceled: {
+    icon: XCircle,
+    color: 'text-destructive',
+    label: 'Subscription canceled',
+  },
+  checkout_started: {
+    icon: CreditCard,
+    color: 'text-primary',
+    label: 'Checkout started',
+  },
+  checkout_abandoned: {
+    icon: AlertTriangle,
+    color: 'text-warning',
+    label: 'Checkout abandoned',
+  },
+  report_limit_reached: {
+    icon: AlertTriangle,
+    color: 'text-warning',
+    label: 'Report limit reached',
+  },
+  $exception: {
+    icon: XCircle,
+    color: 'text-destructive',
+    label: 'Error occurred',
+  },
 };
 
 const displayedActivities = computed(() => props.activities.slice(0, 10));
 
-function formatTimeAgo(date: Date): string {
+function formatTimeAgo(timestamp: string): string {
+  const date = new Date(timestamp);
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
   const diffMins = Math.floor(diffMs / 60000);
@@ -48,6 +81,16 @@ function formatTimeAgo(date: Date): string {
   if (diffMins < 60) return `${diffMins}m ago`;
   if (diffHours < 24) return `${diffHours}h ago`;
   return `${diffDays}d ago`;
+}
+
+function getEventConfig(eventName: string) {
+  return (
+    eventTypeMap[eventName] || {
+      icon: FileText,
+      color: 'text-muted-foreground',
+      label: eventName,
+    }
+  );
 }
 </script>
 
@@ -63,26 +106,20 @@ function formatTimeAgo(date: Date): string {
     <ScrollArea class="h-96">
       <ul class="divide-y divide-border">
         <li
-          v-for="activity in displayedActivities"
-          :key="activity.id"
+          v-for="(activity, index) in displayedActivities"
+          :key="index"
           class="flex items-start gap-4 px-6 py-4 transition-colors hover:bg-muted/50"
         >
-          <span :class="['mt-0.5', activityColors[activity.type]]">
-            <component :is="activityIcons[activity.type]" class="h-4 w-4" />
+          <span :class="['mt-0.5', getEventConfig(activity[0]).color]">
+            <component :is="getEventConfig(activity[0]).icon" class="h-4 w-4" />
           </span>
           <div class="flex-1 min-w-0">
             <p class="text-sm leading-relaxed text-foreground">
-              {{ activity.message }}
-            </p>
-            <p
-              v-if="activity.details"
-              class="mt-1 text-xs text-muted-foreground truncate"
-            >
-              {{ activity.details }}
+              {{ getEventConfig(activity[0]).label }}
             </p>
           </div>
           <span class="shrink-0 text-xs text-muted-foreground">
-            {{ formatTimeAgo(activity.timestamp) }}
+            {{ formatTimeAgo(activity[1]) }}
           </span>
         </li>
       </ul>

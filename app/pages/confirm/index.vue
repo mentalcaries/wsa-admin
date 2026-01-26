@@ -11,7 +11,7 @@ watch(
   user,
   () => {
     if (user.value) {
-      navigateTo('/dashboard');
+      navigateTo('/');
     }
   },
   { immediate: true },
