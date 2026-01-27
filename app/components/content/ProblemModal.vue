@@ -212,19 +212,19 @@ const handleDragEnd = () => {
             <label class="mb-2 block text-sm font-medium text-foreground">
               Problem Name
             </label>
-            <textarea
+            <input
               v-model="editedProblem.name"
               rows="2"
               class="w-full rounded-lg border border-border bg-card px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-none"
-              placeholder="Enter problem name..."
+              placeholder="Enter problem type"
             />
           </div>
 
           <div class="flex items-center justify-between">
             <label class="text-sm font-medium text-foreground">Active</label>
             <Switch
-              :checked="editedProblem.active"
-              @update:checked="
+              :model-value="editedProblem.active"
+              @update:model-value="
                 (checked: boolean) => (editedProblem!.active = checked)
               "
             />

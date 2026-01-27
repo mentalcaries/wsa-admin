@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import {
   Plus,
   FileText,
@@ -13,21 +13,30 @@ import {
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import type { Problem } from '~/types';
-import { initialProblems } from '~/utils/content-data';
 
 definePageMeta({
   layout: 'dashboard',
 });
 
-const ITEMS_PER_PAGE = 10;
+const ITEMS_PER_PAGE = 15;
 
-const problems = ref<Problem[]>([...initialProblems]);
+const {
+  fetchProblems,
+  toggleProblemActive,
+  createProblem,
+  updateProblem,
+  deleteProblem,
+} = useContentManagement();
+
+const problems = ref<Problem[]>([]);
 const searchQuery = ref('');
 const currentPage = ref(1);
 const editingProblem = ref<Problem | null>(null);
 const isModalOpen = ref(false);
 const deletingProblem = ref<Problem | null>(null);
 const isDeleteDialogOpen = ref(false);
+const isLoading = ref(false);
+const error = ref<string | null>(null);
 
 const filteredProblems = computed(() => {
   return problems.value.filter((p) =>
@@ -52,21 +61,52 @@ const totalSolutions = computed(() => {
   return problems.value.reduce((sum, p) => sum + p.solutions.length, 0);
 });
 
-const handleToggleActive = (problemId: string) => {
-  problems.value = problems.value.map((p) =>
-    p.id === problemId ? { ...p, active: !p.active } : p,
-  );
+const loadProblems = async () => {
+  isLoading.value = true;
+  error.value = null;
+  try {
+    problems.value = await fetchProblems();
+  } catch (e) {
+    error.value = e instanceof Error ? e.message : 'Failed to load problems';
+    console.error('Error loading problems:', e);
+  } finally {
+    isLoading.value = false;
+  }
 };
 
+const handleToggleActive = async (
+  problemId: string,
+  newActiveState: boolean,
+) => {
+  const problem = problems.value.find((p) => p.id === problemId);
+  if (!problem) return;
+
+  problems.value = problems.value.map((p) =>
+    p.id === problemId ? { ...p, active: newActiveState } : p,
+  );
+
+  try {
+    await toggleProblemActive(problemId, newActiveState);
+  } catch (e) {
+    problems.value = problems.value.map((p) =>
+      p.id === problemId ? { ...p, active: problem.active } : p,
+    );
+    error.value = e instanceof Error ? e.message : 'Failed to update problem';
+    console.error('Error toggling active state:', e);
+  }
+};
 const handleEdit = (problem: Problem) => {
   editingProblem.value = problem;
   isModalOpen.value = true;
 };
 
 const handleAddNew = () => {
-  const newId = String(
-    Math.max(...problems.value.map((p) => Number(p.id))) + 1,
-  );
+  const maxId =
+    problems.value.length > 0
+      ? Math.max(...problems.value.map((p) => Number(p.id)))
+      : 0;
+  const newId = String(maxId + 1);
+
   const newProblem: Problem = {
     id: newId,
     name: '',
@@ -78,17 +118,27 @@ const handleAddNew = () => {
   isModalOpen.value = true;
 };
 
-const handleSave = (updatedProblem: Problem) => {
+const handleSave = async (updatedProblem: Problem) => {
   const exists = problems.value.find((p) => p.id === updatedProblem.id);
-  if (exists) {
-    problems.value = problems.value.map((p) =>
-      p.id === updatedProblem.id ? updatedProblem : p,
-    );
-  } else {
-    problems.value = [...problems.value, updatedProblem];
+
+  try {
+    if (exists) {
+      await updateProblem(updatedProblem);
+      await loadProblems();
+    } else {
+      await createProblem({
+        name: updatedProblem.name,
+        active: updatedProblem.active,
+        displayOrder: updatedProblem.displayOrder,
+      });
+      await loadProblems();
+    }
+    isModalOpen.value = false;
+    editingProblem.value = null;
+  } catch (e) {
+    error.value = e instanceof Error ? e.message : 'Failed to save problem';
+    console.error('Error saving problem:', e);
   }
-  isModalOpen.value = false;
-  editingProblem.value = null;
 };
 
 const handleDeleteClick = (problem: Problem) => {
@@ -96,14 +146,18 @@ const handleDeleteClick = (problem: Problem) => {
   isDeleteDialogOpen.value = true;
 };
 
-const handleConfirmDelete = () => {
-  if (deletingProblem.value) {
-    problems.value = problems.value.filter(
-      (p) => p.id !== deletingProblem.value!.id,
-    );
+const handleConfirmDelete = async () => {
+  if (!deletingProblem.value) return;
+
+  try {
+    await deleteProblem(deletingProblem.value.id);
+    await loadProblems();
+    isDeleteDialogOpen.value = false;
+    deletingProblem.value = null;
+  } catch (e) {
+    error.value = e instanceof Error ? e.message : 'Failed to delete problem';
+    console.error('Error deleting problem:', e);
   }
-  isDeleteDialogOpen.value = false;
-  deletingProblem.value = null;
 };
 
 const closeModal = () => {
@@ -128,26 +182,35 @@ const goToPrevPage = () => {
 const goToNextPage = () => {
   currentPage.value = Math.min(totalPages.value, currentPage.value + 1);
 };
+
+onMounted(() => {
+  loadProblems();
+});
 </script>
 
 <template>
   <div class="min-h-screen bg-background">
     <main class="pt-14">
       <div class="mx-auto max-w-7xl px-6 py-10">
-        <!-- Header -->
+        <div
+          v-if="error"
+          class="mb-6 rounded-lg border border-destructive bg-destructive/10 px-4 py-3 text-sm text-destructive"
+        >
+          {{ error }}
+        </div>
+
         <div
           class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
         >
           <h1 class="text-2xl font-semibold text-foreground">
             Content Management
           </h1>
-          <Button class="gap-2" @click="handleAddNew">
+          <Button class="gap-2" @click="handleAddNew" :disabled="isLoading">
             <Plus class="h-4 w-4" />
             Add Problem
           </Button>
         </div>
 
-        <!-- Stats Cards -->
         <div class="mt-8 grid grid-cols-2 gap-6 sm:max-w-md">
           <div class="rounded-lg border border-border bg-card p-6 shadow-sm">
             <div class="flex items-center gap-4">
@@ -158,7 +221,7 @@ const goToNextPage = () => {
               </div>
               <div>
                 <p class="text-3xl font-semibold text-foreground">
-                  {{ problems.length }}
+                  {{ isLoading ? '...' : problems.length }}
                 </p>
                 <p class="text-sm text-muted-foreground">Problems</p>
               </div>
@@ -173,7 +236,7 @@ const goToNextPage = () => {
               </div>
               <div>
                 <p class="text-3xl font-semibold text-foreground">
-                  {{ totalSolutions }}
+                  {{ isLoading ? '...' : totalSolutions }}
                 </p>
                 <p class="text-sm text-muted-foreground">Solutions</p>
               </div>
@@ -181,7 +244,6 @@ const goToNextPage = () => {
           </div>
         </div>
 
-        <!-- Search Bar -->
         <div class="mt-8">
           <div class="relative max-w-md">
             <Search
@@ -192,6 +254,7 @@ const goToNextPage = () => {
               type="text"
               placeholder="Search problems..."
               class="w-full rounded-lg border border-border bg-card py-2.5 pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              :disabled="isLoading"
               @input="
                 handleSearchChange(($event.target as HTMLInputElement).value)
               "
@@ -199,11 +262,26 @@ const goToNextPage = () => {
           </div>
         </div>
 
-        <!-- Problems Table -->
         <div
           class="mt-6 overflow-hidden rounded-lg border border-border bg-card shadow-sm"
         >
-          <div class="overflow-x-auto">
+          <div
+            v-if="isLoading"
+            class="px-6 py-12 text-center text-sm text-muted-foreground"
+          >
+            Loading problems...
+          </div>
+          <div
+            v-else-if="paginatedProblems.length === 0"
+            class="px-6 py-12 text-center text-sm text-muted-foreground"
+          >
+            {{
+              searchQuery
+                ? 'No problems found matching your search.'
+                : 'No problems yet. Add one to get started.'
+            }}
+          </div>
+          <div v-else class="overflow-x-auto">
             <table class="w-full">
               <thead>
                 <tr class="border-b border-border bg-muted/50">
@@ -250,15 +328,18 @@ const goToNextPage = () => {
                   </td>
                   <td class="whitespace-nowrap px-6 py-4">
                     <span
-                      class="inline-flex items-center rounded-full bg-/10 px-2.5 py-0.5 text-xs font-medium text-primary"
+                      class="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary"
                     >
                       {{ problem.solutions.length }} solutions
                     </span>
                   </td>
                   <td class="whitespace-nowrap px-6 py-4">
                     <Switch
-                      :checked="problem.active"
-                      @update:checked="handleToggleActive(problem.id)"
+                      :model-value="problem.active"
+                      @update:model-value="
+                        (value: boolean) =>
+                          handleToggleActive(problem.id, value)
+                      "
                     />
                   </td>
                   <td class="whitespace-nowrap px-6 py-4 text-right">
@@ -288,8 +369,8 @@ const goToNextPage = () => {
             </table>
           </div>
 
-          <!-- Pagination -->
           <div
+            v-if="!isLoading && paginatedProblems.length > 0"
             class="flex items-center justify-between border-t border-border px-6 py-4"
           >
             <p class="text-sm text-muted-foreground">
@@ -328,7 +409,6 @@ const goToNextPage = () => {
       </div>
     </main>
 
-    <!-- Problem Edit Modal -->
     <ContentProblemModal
       :problem="editingProblem"
       :is-open="isModalOpen"
@@ -336,7 +416,6 @@ const goToNextPage = () => {
       @save="handleSave"
     />
 
-    <!-- Delete Confirmation Dialog -->
     <ContentDeleteConfirmDialog
       :is-open="isDeleteDialogOpen"
       :problem-name="deletingProblem?.name || ''"
