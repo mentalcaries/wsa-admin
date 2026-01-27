@@ -184,28 +184,16 @@ const handleDragEnd = () => {
             Problem Details
           </h3>
 
-          <div class="grid gap-5 sm:grid-cols-2">
-            <div>
-              <label class="mb-2 block text-sm font-medium text-foreground">
-                Problem ID
-              </label>
-              <input
-                v-model="editedProblem.id"
-                type="text"
-                readonly
-                class="w-full rounded-lg border border-border bg-muted px-4 py-2.5 text-sm text-muted-foreground"
-              />
-            </div>
-            <div>
-              <label class="mb-2 block text-sm font-medium text-foreground">
-                Display Order
-              </label>
-              <input
-                v-model.number="editedProblem.displayOrder"
-                type="number"
-                class="w-full rounded-lg border border-border bg-card px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-              />
-            </div>
+          <div v-if="!isNewProblem">
+            <label class="mb-2 block text-sm font-medium text-foreground">
+              Problem ID
+            </label>
+            <input
+              v-model="editedProblem.id"
+              type="text"
+              readonly
+              class="w-full rounded-lg border border-border bg-muted px-4 py-2.5 text-sm text-muted-foreground"
+            />
           </div>
 
           <div>

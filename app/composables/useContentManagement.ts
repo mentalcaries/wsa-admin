@@ -64,21 +64,26 @@ export const useContentManagement = () => {
       throw error;
     }
   };
+
   const createProblem = async (problem: Omit<Problem, 'id' | 'solutions'>) => {
     const { data: existingProblems } = await supabase
       .from('problems')
       .select('problem_id')
-      .order('problem_id', { ascending: false })
+      .order('problem_id', { referencedTable: 'problems', ascending: false })
       .limit(1);
 
     const nextProblemId = existingProblems?.[0]
       ? String(parseInt(existingProblems[0].problem_id) + 1)
       : '1';
 
+    const { count } = await supabase
+      .from('problems')
+      .select('*', { count: 'exact', head: true });
+
     const insertData: DbProblemInsert = {
       problem_id: nextProblemId,
       name: problem.name,
-      display_order: problem.displayOrder,
+      display_order: (count || 0) + 1,
       is_active: problem.active,
     };
 
@@ -226,6 +231,25 @@ export const useContentManagement = () => {
     if (error) throw error;
   };
 
+  const reorderProblems = async (reorderedProblems: Problem[]) => {
+    const updates = reorderedProblems.map((problem, index) =>
+      supabase
+        .from('problems')
+        .update({
+          display_order: index + 1,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('problem_id', problem.id),
+    );
+
+    const results = await Promise.all(updates);
+
+    const errors = results.filter((r) => r.error);
+    if (errors.length > 0) {
+      throw new Error('Failed to reorder problems');
+    }
+  };
+
   return {
     fetchProblems,
     toggleProblemActive,
@@ -236,5 +260,6 @@ export const useContentManagement = () => {
     updateSolution,
     deleteSolution,
     reorderSolutions,
+    reorderProblems,
   };
 };

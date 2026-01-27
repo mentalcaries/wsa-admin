@@ -26,6 +26,7 @@ const {
   createProblem,
   updateProblem,
   deleteProblem,
+  reorderProblems,
 } = useContentManagement();
 
 const problems = ref<Problem[]>([]);
@@ -37,6 +38,7 @@ const deletingProblem = ref<Problem | null>(null);
 const isDeleteDialogOpen = ref(false);
 const isLoading = ref(false);
 const error = ref<string | null>(null);
+const isReorderModalOpen = ref(false);
 
 const filteredProblems = computed(() => {
   return problems.value.filter((p) =>
@@ -183,6 +185,25 @@ const goToNextPage = () => {
   currentPage.value = Math.min(totalPages.value, currentPage.value + 1);
 };
 
+const handleReorderClick = () => {
+  isReorderModalOpen.value = true;
+};
+
+const handleReorderSave = async (reorderedProblems: Problem[]) => {
+  try {
+    await reorderProblems(reorderedProblems);
+    await loadProblems();
+    isReorderModalOpen.value = false;
+  } catch (e) {
+    error.value = e instanceof Error ? e.message : 'Failed to reorder problems';
+    console.error('Error reordering problems:', e);
+  }
+};
+
+const closeReorderModal = () => {
+  isReorderModalOpen.value = false;
+};
+
 onMounted(() => {
   loadProblems();
 });
@@ -244,8 +265,8 @@ onMounted(() => {
           </div>
         </div>
 
-        <div class="mt-8">
-          <div class="relative max-w-md">
+        <div class="mt-8 flex items-center justify-between gap-4">
+          <div class="relative max-w-md flex-1">
             <Search
               class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
             />
@@ -260,6 +281,14 @@ onMounted(() => {
               "
             />
           </div>
+          <Button
+            variant="outline"
+            class="gap-2 bg-transparent"
+            :disabled="isLoading || problems.length === 0"
+            @click="handleReorderClick"
+          >
+            Reorder Problems
+          </Button>
         </div>
 
         <div
@@ -288,7 +317,7 @@ onMounted(() => {
                   <th
                     class="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground"
                   >
-                    ID
+                    Order
                   </th>
                   <th
                     class="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground"
@@ -321,7 +350,7 @@ onMounted(() => {
                   <td
                     class="whitespace-nowrap px-6 py-4 text-sm text-muted-foreground"
                   >
-                    {{ problem.id }}
+                    {{ problem.displayOrder }}
                   </td>
                   <td class="px-6 py-4 text-sm font-medium text-foreground">
                     {{ problem.name }}
@@ -421,6 +450,12 @@ onMounted(() => {
       :problem-name="deletingProblem?.name || ''"
       @close="closeDeleteDialog"
       @confirm="handleConfirmDelete"
+    />
+    <ContentReorderProblemsModal
+      :problems="problems"
+      :is-open="isReorderModalOpen"
+      @close="closeReorderModal"
+      @save="handleReorderSave"
     />
   </div>
 </template>
