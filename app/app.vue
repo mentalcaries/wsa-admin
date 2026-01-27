@@ -1,11 +1,10 @@
 <script setup lang="ts">
 import { Toaster } from 'vue-sonner';
+import 'vue-sonner/style.css';
 
 useHead({
   title: 'WellSoveAble | ControlValve',
-  meta: [
-    { name: 'description', content: 'WellSolveAble Admin Dashboard' },
-  ],
+  meta: [{ name: 'description', content: 'WellSolveAble Admin Dashboard' }],
   link: [
     {
       rel: 'icon',

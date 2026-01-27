@@ -28,6 +28,10 @@ const {
   updateProblem,
   deleteProblem,
   reorderProblems,
+  addSolution,
+  updateSolution,
+  deleteSolution,
+  reorderSolutions,
 } = useContentManagement();
 
 const problems = ref<Problem[]>([]);
@@ -122,18 +126,67 @@ const handleAddNew = () => {
 };
 
 const handleSave = async (updatedProblem: Problem) => {
-  const exists = problems.value.find((p) => p.id === updatedProblem.id);
+  const existingProblem = problems.value.find(
+    (p) => p.id === updatedProblem.id,
+  );
 
   try {
-    if (exists) {
+    if (existingProblem) {
       await updateProblem(updatedProblem);
+
+      const originalSolutions = existingProblem.solutions;
+      const newSolutions = updatedProblem.solutions;
+
+      const originalSolutionIds = new Set(originalSolutions.map((s) => s.id));
+      const newSolutionIds = new Set(newSolutions.map((s) => s.id));
+
+      const solutionsToAdd = newSolutions.filter(
+        (s) => !originalSolutionIds.has(s.id),
+      );
+      const solutionsToDelete = originalSolutions.filter(
+        (s) => !newSolutionIds.has(s.id),
+      );
+      const solutionsToUpdate = newSolutions.filter((s) => {
+        const original = originalSolutions.find((o) => o.id === s.id);
+        return original && original.text !== s.text;
+      });
+
+      const hasOrderChanged = newSolutions.some((s, idx) => {
+        const original = originalSolutions.find((o) => o.id === s.id);
+        return original && original.displayOrder !== s.displayOrder;
+      });
+
+      for (const solution of solutionsToAdd) {
+        await addSolution(updatedProblem.id, { text: solution.text });
+      }
+
+      for (const solution of solutionsToUpdate) {
+        await updateSolution(solution.id, solution.text);
+      }
+
+      for (const solution of solutionsToDelete) {
+        await deleteSolution(solution.id);
+      }
+
+      if (hasOrderChanged && newSolutions.length > 0) {
+        await reorderSolutions(newSolutions, updatedProblem.id);
+      }
+
       await loadProblems();
     } else {
-      await createProblem({
+      const newProblem = await createProblem({
         name: updatedProblem.name,
         active: updatedProblem.active,
         displayOrder: updatedProblem.displayOrder,
       });
+
+      if (updatedProblem.solutions.length > 0) {
+        const newProblemId = String(newProblem.problem_id);
+        for (const solution of updatedProblem.solutions) {
+          await addSolution(newProblemId, { text: solution.text });
+        }
+      }
+
       await loadProblems();
     }
     isModalOpen.value = false;
@@ -336,7 +389,8 @@ onMounted(() => {
                 <tr
                   v-for="problem in paginatedProblems"
                   :key="problem.id"
-                  class="transition-colors hover:bg-muted/30"
+                  class="transition-colors hover:bg-muted/30 cursor-pointer"
+                  @click="handleEdit(problem)"
                 >
                   <td
                     class="whitespace-nowrap px-6 py-4 text-sm text-muted-foreground"
@@ -353,7 +407,7 @@ onMounted(() => {
                       {{ problem.solutions.length }} solutions
                     </span>
                   </td>
-                  <td class="whitespace-nowrap px-6 py-4">
+                  <td class="whitespace-nowrap px-6 py-4" @click.stop>
                     <Switch
                       :model-value="problem.active"
                       @update:model-value="
@@ -362,7 +416,10 @@ onMounted(() => {
                       "
                     />
                   </td>
-                  <td class="whitespace-nowrap px-6 py-4 text-right">
+                  <td
+                    class="whitespace-nowrap px-6 py-4 text-right"
+                    @click.stop
+                  >
                     <div class="flex items-center justify-end gap-2">
                       <Button
                         variant="ghost"

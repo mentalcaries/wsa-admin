@@ -91,7 +91,7 @@ export type Database = {
           id: string
           is_active: boolean
           name: string
-          problem_id: string
+          problem_id: number
           updated_at: string | null
         }
         Insert: {
@@ -100,7 +100,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           name: string
-          problem_id: string
+          problem_id: number
           updated_at?: string | null
         }
         Update: {
@@ -109,7 +109,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           name?: string
-          problem_id?: string
+          problem_id?: number
           updated_at?: string | null
         }
         Relationships: []
@@ -575,7 +575,7 @@ export type CompositeTypes<
 
 export const Constants = {
   graphql_public: {
-    Enums: {}, 
+    Enums: {},
   },
   public: {
     Enums: {

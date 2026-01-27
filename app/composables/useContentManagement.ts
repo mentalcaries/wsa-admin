@@ -13,7 +13,7 @@ export const useContentManagement = () => {
     dbProblem: DbProblem & { solutions?: DbSolution[] },
   ): Problem => {
     return {
-      id: dbProblem.problem_id,
+      id: String(dbProblem.problem_id),
       name: dbProblem.name,
       active: dbProblem.is_active,
       displayOrder: dbProblem.display_order,
@@ -57,24 +57,20 @@ export const useContentManagement = () => {
         is_active: isActive,
         updated_at: new Date().toISOString(),
       })
-      .eq('problem_id', problemId);
+      .eq('problem_id', parseInt(problemId));
 
-    if (error) {
-      console.error('Supabase error:', error);
-      throw error;
-    }
+    if (error) throw error;
   };
-
   const createProblem = async (problem: Omit<Problem, 'id' | 'solutions'>) => {
     const { data: existingProblems } = await supabase
       .from('problems')
       .select('problem_id')
-      .order('problem_id', { referencedTable: 'problems', ascending: false })
+      .order('problem_id', { ascending: false })
       .limit(1);
 
     const nextProblemId = existingProblems?.[0]
-      ? String(parseInt(existingProblems[0].problem_id) + 1)
-      : '1';
+      ? existingProblems[0].problem_id + 1
+      : 1;
 
     const { count } = await supabase
       .from('problems')
@@ -106,7 +102,7 @@ export const useContentManagement = () => {
         is_active: problem.active,
         updated_at: new Date().toISOString(),
       })
-      .eq('problem_id', problem.id);
+      .eq('problem_id', parseInt(problem.id));
 
     if (error) throw error;
   };
@@ -115,7 +111,7 @@ export const useContentManagement = () => {
     const { data: problem } = await supabase
       .from('problems')
       .select('id')
-      .eq('problem_id', problemId)
+      .eq('problem_id', parseInt(problemId))
       .single();
 
     if (!problem) throw new Error('Problem not found');
@@ -134,7 +130,7 @@ export const useContentManagement = () => {
     const { data: problem } = await supabase
       .from('problems')
       .select('id')
-      .eq('problem_id', problemId)
+      .eq('problem_id', parseInt(problemId))
       .single();
 
     if (!problem) throw new Error('Problem not found');
@@ -179,7 +175,6 @@ export const useContentManagement = () => {
     if (error) throw error;
     return data;
   };
-
   const updateSolution = async (solutionId: string, text: string) => {
     const { error } = await supabase
       .from('solutions')
@@ -205,7 +200,7 @@ export const useContentManagement = () => {
     const { data: problem } = await supabase
       .from('problems')
       .select('id')
-      .eq('problem_id', problemId)
+      .eq('problem_id', parseInt(problemId))
       .single();
 
     if (!problem) throw new Error('Problem not found');
@@ -239,7 +234,7 @@ export const useContentManagement = () => {
           display_order: index + 1,
           updated_at: new Date().toISOString(),
         })
-        .eq('problem_id', problem.id),
+        .eq('problem_id', parseInt(problem.id)),
     );
 
     const results = await Promise.all(updates);
