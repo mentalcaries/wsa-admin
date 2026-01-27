@@ -9,6 +9,7 @@ import {
   Trash2,
   ChevronLeft,
   ChevronRight,
+  ArrowUpDown,
 } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -162,11 +163,6 @@ const handleConfirmDelete = async () => {
   }
 };
 
-const closeModal = () => {
-  isModalOpen.value = false;
-  editingProblem.value = null;
-};
-
 const closeDeleteDialog = () => {
   isDeleteDialogOpen.value = false;
   deletingProblem.value = null;
@@ -198,10 +194,6 @@ const handleReorderSave = async (reorderedProblems: Problem[]) => {
     error.value = e instanceof Error ? e.message : 'Failed to reorder problems';
     console.error('Error reordering problems:', e);
   }
-};
-
-const closeReorderModal = () => {
-  isReorderModalOpen.value = false;
 };
 
 onMounted(() => {
@@ -282,12 +274,11 @@ onMounted(() => {
             />
           </div>
           <Button
-            variant="outline"
-            class="gap-2 bg-transparent"
+            variant="default"
             :disabled="isLoading || problems.length === 0"
             @click="handleReorderClick"
           >
-            Reorder Problems
+            <ArrowUpDown /> Reorder Problems
           </Button>
         </div>
 
@@ -440,8 +431,7 @@ onMounted(() => {
 
     <ContentProblemModal
       :problem="editingProblem"
-      :is-open="isModalOpen"
-      @close="closeModal"
+      v-model:open="isModalOpen"
       @save="handleSave"
     />
 
@@ -453,8 +443,7 @@ onMounted(() => {
     />
     <ContentReorderProblemsModal
       :problems="problems"
-      :is-open="isReorderModalOpen"
-      @close="closeReorderModal"
+      v-model:open="isReorderModalOpen"
       @save="handleReorderSave"
     />
   </div>

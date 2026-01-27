@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue';
 import {
-  X,
   Plus,
   GripVertical,
   ChevronDown,
@@ -11,16 +10,23 @@ import {
 } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import type { Problem, Solution } from '~/types';
 
 interface Props {
   problem: Problem | null;
-  isOpen: boolean;
+  open: boolean;
 }
 
 const props = defineProps<Props>();
 const emit = defineEmits<{
-  close: [];
+  'update:open': [value: boolean];
   save: [problem: Problem];
 }>();
 
@@ -52,8 +58,8 @@ const handleSave = () => {
   }
 };
 
-const handleClose = () => {
-  emit('close');
+const handleOpenChange = (open: boolean) => {
+  emit('update:open', open);
 };
 
 const toggleSolutionExpand = (solutionId: string) => {
@@ -124,7 +130,6 @@ const handleDragOver = (event: DragEvent, index: number) => {
   const newSolutions = [...editedProblem.value.solutions];
   const draggedItem = newSolutions[draggedIndex.value];
 
-  // Type guard to ensure draggedItem exists
   if (!draggedItem) return;
 
   newSolutions.splice(draggedIndex.value, 1);
@@ -148,35 +153,18 @@ const handleDragEnd = () => {
 </script>
 
 <template>
-  <div
-    v-if="isOpen && editedProblem"
-    class="fixed inset-0 z-50 flex items-center justify-center"
-  >
-    <!-- Backdrop -->
-    <div class="absolute inset-0 bg-foreground/20" @click="handleClose" />
-
-    <!-- Modal -->
-    <div
-      class="relative z-10 w-full max-w-3xl max-h-[90vh] overflow-hidden rounded-lg border border-border bg-card shadow-lg"
+  <Dialog :open="open" @update:open="handleOpenChange">
+    <DialogContent
+      v-if="editedProblem"
+      class="!sm:max-w-4xl max-w-3xl max-h-[90vh] overflow-hidden flex flex-col"
     >
-      <!-- Header -->
-      <div
-        class="flex items-center justify-between border-b border-border px-6 py-4"
-      >
-        <h2 class="text-lg font-semibold text-foreground">
+      <DialogHeader>
+        <DialogTitle>
           {{ isNewProblem ? 'Add New Problem' : 'Edit Problem' }}
-        </h2>
-        <button
-          class="rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-          @click="handleClose"
-        >
-          <X class="h-5 w-5" />
-        </button>
-      </div>
+        </DialogTitle>
+      </DialogHeader>
 
-      <!-- Content -->
-      <div class="max-h-[calc(90vh-8rem)] overflow-y-auto px-6 py-6">
-        <!-- Problem Details Section -->
+      <div class="flex-1 overflow-y-auto space-y-6">
         <div class="space-y-5">
           <h3
             class="text-sm font-medium text-muted-foreground uppercase tracking-wider"
@@ -184,8 +172,11 @@ const handleDragEnd = () => {
             Problem Details
           </h3>
 
-          <div v-if="!isNewProblem">
-            <label class="mb-2 block text-sm font-medium text-foreground">
+          <div v-if="!isNewProblem" class="p-2">
+            <label
+              class="mb-2 block text-sm font-medium text-foreground"
+              for="problem-id"
+            >
               Problem ID
             </label>
             <input
@@ -193,18 +184,23 @@ const handleDragEnd = () => {
               type="text"
               readonly
               class="w-full rounded-lg border border-border bg-muted px-4 py-2.5 text-sm text-muted-foreground"
+              id="problem-id"
             />
           </div>
 
-          <div>
-            <label class="mb-2 block text-sm font-medium text-foreground">
+          <div class="p-2">
+            <label
+              class="mb-2 block text-sm font-medium text-foreground"
+              for="problem-name"
+            >
               Problem Name
             </label>
             <input
               v-model="editedProblem.name"
-              rows="2"
-              class="w-full rounded-lg border border-border bg-card px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-none"
+              type="text"
+              class="w-full rounded-lg border border-border bg-card px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
               placeholder="Enter problem type"
+              id="problem-name"
             />
           </div>
 
@@ -219,10 +215,8 @@ const handleDragEnd = () => {
           </div>
         </div>
 
-        <!-- Divider -->
-        <div class="my-8 h-px bg-border" />
+        <div class="h-px bg-border" />
 
-        <!-- Solutions Section -->
         <div class="space-y-4">
           <div class="flex items-center justify-between">
             <h3
@@ -345,15 +339,12 @@ const handleDragEnd = () => {
         </div>
       </div>
 
-      <!-- Footer -->
-      <div
-        class="flex items-center justify-end gap-3 border-t border-border px-6 py-4"
-      >
-        <Button variant="outline" class="bg-transparent" @click="handleClose">
+      <DialogFooter>
+        <Button variant="outline" @click="handleOpenChange(false)">
           Cancel
         </Button>
         <Button @click="handleSave">Save</Button>
-      </div>
-    </div>
-  </div>
+      </DialogFooter>
+    </DialogContent>
+  </Dialog>
 </template>
