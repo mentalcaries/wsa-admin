@@ -1,4 +1,4 @@
-import type { Database } from '~/types/database';
+import type { Database } from '~/types/database.types';
 import type { Problem, Solution } from '~/types';
 
 type DbProblem = Database['public']['Tables']['problems']['Row'];

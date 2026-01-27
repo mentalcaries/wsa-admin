@@ -11,7 +11,10 @@ const links: QuickLink[] = [
   { name: 'Resend Analytics', href: 'https://resend.com/emails' },
   { name: 'PostHog Insights', href: 'https://app.posthog.com' },
   { name: 'Supabase Console', href: 'https://supabase.com/dashboard' },
-  { name: 'Notion Docs', href: 'https://notion.so' },
+  {
+    name: 'Notion Docs',
+    href: 'https://www.notion.so/WellSolveAble-2f1acfedf9b880e69a59c066fd92997e?source=copy_link',
+  },
 ];
 </script>
 

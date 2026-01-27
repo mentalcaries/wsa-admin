@@ -124,13 +124,6 @@ function getEventConfig(eventName: string) {
         </li>
       </ul>
     </ScrollArea>
-    <div class="border-t border-border px-6 py-4">
-      <NuxtLink
-        to="/activity"
-        class="text-sm font-medium text-primary hover:underline"
-      >
-        View All Activity
-      </NuxtLink>
-    </div>
+    <div class="border-t border-border px-6 py-4"></div>
   </div>
 </template>

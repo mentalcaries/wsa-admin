@@ -5,6 +5,7 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   modules: ['@nuxt/fonts', 'shadcn-nuxt', '@nuxtjs/supabase'],
   supabase: {
+    types: '~/types/database',
     redirectOptions: {
       login: '/login',
       callback: '/confirm', //
