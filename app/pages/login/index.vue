@@ -152,12 +152,14 @@ const handleGoogleSignIn = async () => {
       </Card>
 
       <div
-        class="mx-auto bg-red-100 mb- text-red-600 p-2 rounded-xl"
+        class="mx-auto bg-red-100 mb- text-red-600 p-4 rounded-xl"
         v-if="isUnauthorized"
       >
         <p class="text-sm text-gray-600 text-center">
-          Your account is not authorized to use ControlValve. If you believe
-          this is an error, please contact your administrator.
+          <span class="font-semibold"
+            >Your account is not authorized to use ControlValve.</span
+          >
+          If you believe this is an error, please contact your administrator.
         </p>
       </div>
 
