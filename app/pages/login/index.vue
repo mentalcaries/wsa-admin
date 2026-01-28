@@ -18,8 +18,21 @@ definePageMeta({
 const client = useSupabaseClient();
 const user = useSupabaseUser();
 const isLoading = ref(false);
+const route = useRoute();
+const isUnauthorized = ref(route.query.unauthorized === 'true');
 
-// If already logged in, redirect to dashboard
+watch(
+  isUnauthorized,
+  (newVal) => {
+    if (newVal) {
+      toast.error('Access Denied', {
+        description: 'You do not have permission to access the admin portal.',
+      });
+    }
+  },
+  { immediate: true },
+);
+
 watchEffect(() => {
   if (user.value) {
     navigateTo('/dashboard');
@@ -33,7 +46,7 @@ const handleGoogleSignIn = async () => {
     const { error } = await client.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/confirm`, // Changed to /confirm
+        redirectTo: `${window.location.origin}/confirm`,
       },
     });
 
@@ -52,13 +65,15 @@ const handleGoogleSignIn = async () => {
 
 <template>
   <div class="flex min-h-screen flex-col items-center mt-40 bg-background px-4">
-    <div class="w-full max-w-sm">
+    <div class="w-full max-w-sm space-y-3">
       <!-- Logo -->
       <div class="flex items-center flex-col justify-center gap-2 my-8">
         <img src="/logo-dark.png" alt="WSA Logo" class="rounded-lg h-20" />
         <h2 class="text-2xl font-semibold tracking-tighter text-primary">
           WellSolveAble |
-          <span class="font-bold tracking-tight text-foreground">ControlValve</span>
+          <span class="font-bold tracking-tight text-foreground"
+            >ControlValve</span
+          >
         </h2>
       </div>
 
@@ -136,10 +151,23 @@ const handleGoogleSignIn = async () => {
         </CardContent>
       </Card>
 
+      <div
+        class="mx-auto bg-red-100 mb- text-red-600 p-2 rounded-xl"
+        v-if="isUnauthorized"
+      >
+        <p class="text-sm text-gray-600 text-center">
+          Your account is not authorized to use ControlValve. If you believe
+          this is an error, please contact your administrator.
+        </p>
+      </div>
+
       <!-- Footer -->
       <p class="mt-6 text-center text-xs text-muted-foreground">
         Need help?
-        <a href="#" class="text-primary underline-offset-4 hover:underline">
+        <a
+          href="mailto:dev@wellsolveable.com"
+          class="text-primary underline-offset-4 hover:underline"
+        >
           Contact support
         </a>
       </p>

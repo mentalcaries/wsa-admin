@@ -8,7 +8,6 @@ export default defineNuxtRouteMiddleware(async (to) => {
   const user = useSupabaseUser();
   const client = useSupabaseClient();
 
-
   if (!user.value) {
     return navigateTo('/login');
   }
@@ -19,17 +18,8 @@ export default defineNuxtRouteMiddleware(async (to) => {
     .eq('id', user.value.sub)
     .single<UserProfile>();
 
-  if (error) {
-    console.error('Error fetching user profile:', error);
-    return navigateTo('/login');
+  if (error || profile?.role !== 'platform_admin') {
+    await client.auth.signOut();
+    return navigateTo('/login?unauthorized=true');
   }
-
-  if (profile?.role !== 'platform_admin') {
-    return abortNavigation({
-      statusCode: 403,
-      statusMessage: 'Access Denied: Admin privileges required',
-    });
-  }
-
-  // User is authenticated and is an admin - allow access
 });
