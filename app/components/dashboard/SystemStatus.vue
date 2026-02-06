@@ -32,11 +32,6 @@ const updateMinutesAgo = () => {
 };
 
 onMounted(() => {
-  interval = setInterval(() => {
-    lastChecked.value = new Date();
-    minutesAgo.value = 0;
-  }, 300000);
-
   const minuteInterval = setInterval(updateMinutesAgo, 60000);
 
   onUnmounted(() => {
