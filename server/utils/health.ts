@@ -55,7 +55,7 @@ export async function checkPDFServiceHealth(): Promise<HealthCheckResult> {
 
   try {
     const response = await fetch(`${pdfServiceUrl}/health`, {
-      method: 'GET',
+      method: 'POST',
       signal: AbortSignal.timeout(5000),
     });
 
